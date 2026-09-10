@@ -64,16 +64,21 @@ nav{max-width:1180px;margin:0 auto;padding:0 24px;display:flex;gap:2px;margin-to
 /* ---------- layout ---------- */
 main{max-width:1180px;margin:0 auto;padding:0 24px 72px}
 .painel{display:none;border:1px solid var(--linha-forte);background:var(--papel-2);padding:26px}
-.painel.ativo{display:grid;grid-template-columns:1fr 372px;gap:36px;align-items:start}
-.painel.solo.ativo{grid-template-columns:1fr}
+.painel.ativo{display:grid;grid-template-columns:minmax(0,1fr) 372px;gap:36px;align-items:start}
+.painel.solo.ativo{grid-template-columns:minmax(0,1fr)}
+/* sem isto o texto longo de um <select> estica a coluna e a pagina rola de lado */
+.painel > *,.comp-bloco,label.campo,.rolagem{min-width:0}
 
-fieldset{border:none;border-top:1px solid var(--linha);margin:0 0 22px;padding:16px 0 0}
+/* min-width:0 anula o min-inline-size:min-content que o navegador
+   impoe ao fieldset e que faria a tabela larga esticar a pagina. */
+fieldset{border:none;border-top:1px solid var(--linha);margin:0 0 22px;padding:16px 0 0;min-width:0}
 fieldset:first-of-type{border-top:none;padding-top:0}
 legend{padding:0;font-size:13px;font-weight:600;color:var(--acento)}
 legend small{display:block;font-weight:400;color:var(--tinta-fraca);font-size:12px;margin-top:2px;max-width:70ch}
-.grade{display:grid;grid-template-columns:repeat(auto-fit,minmax(196px,1fr));gap:12px 16px;margin-top:14px}
+.grade{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(196px,100%),1fr));gap:12px 16px;margin-top:14px}
 label.campo{display:flex;flex-direction:column;gap:4px;font-size:13px}
-label.campo span{color:var(--tinta-fraca);line-height:1.3}
+label.campo span{color:var(--tinta-fraca);line-height:1.3;overflow-wrap:anywhere}
+label.campo input,label.campo select{width:100%;max-width:100%}
 label.campo.larga{grid-column:span 2}
 @media(max-width:520px){label.campo.larga{grid-column:span 1}}
 
@@ -132,7 +137,7 @@ button.acao:hover{background:#1B4459;color:#fff}
 .status.erro{color:var(--erro)}
 
 /* ---------- comparativo ---------- */
-.comp{display:grid;grid-template-columns:1fr 1fr;gap:26px}
+.comp{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:26px}
 .comp-bloco{border:1px solid var(--linha-forte);padding:18px}
 .comp-bloco h3{font-size:14px;margin-bottom:12px}
 .linha-kv{display:flex;justify-content:space-between;gap:12px;font-size:13.5px;padding:6px 0;border-bottom:1px dotted var(--linha-forte)}
@@ -145,11 +150,24 @@ button.acao:hover{background:#1B4459;color:#fff}
 .consolidado{margin-top:22px;border-top:2px solid var(--tinta);padding-top:14px;display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:12px}
 .consolidado .v{font-size:30px;font-weight:600;letter-spacing:-.02em}
 
-@media(max-width:960px){
-  .painel.ativo{grid-template-columns:1fr}
-  .fatura{position:static}
-  .comp{grid-template-columns:1fr}
+/* ---------- tabela larga em tela estreita ---------- */
+/* A tabela rola dentro da própria caixa; a página nunca rola de lado. */
+.rolagem{
+  overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior-x:contain;
+  scrollbar-width:thin;
 }
+.rolagem:focus-visible{outline:2px solid var(--acento);outline-offset:2px}
+/* Só a tabela que realmente não cabe ganha largura mínima: a de duas
+   colunas (serviço + preço) fica inteira na tela do celular. A contagem
+   de colunas vem do :has, e onde ele não existir a tabela apenas aperta. */
+.rolagem > table{min-width:0}
+@media(max-width:760px){
+  .rolagem > table:has(th:nth-child(3)){min-width:29rem}
+  .rolagem > table:has(th:nth-child(5)){min-width:36rem}
+}
+
 @media(prefers-reduced-motion:no-preference){
   .barra i{transition:width .25s ease}
 }
@@ -191,6 +209,116 @@ td .fonte{text-align:left}
 .pisca{animation:pisca 1s ease-in-out infinite}
 @keyframes pisca{50%{opacity:.45}}
 @media(prefers-reduced-motion:reduce){.pisca{animation:none}}
+
+/* ============================================================
+   RESPONSIVIDADE
+   Ordem: monitor grande → notebook → tablet → celular.
+   A largura do miolo e o respiro lateral saem das duas variáveis
+   abaixo, então cada faixa ajusta só o que precisa.
+   ============================================================ */
+
+:root{--largura:1180px;--respiro:24px}
+.head-in,nav,main,.barra-status .in{max-width:var(--largura)}
+.head-in{padding-left:var(--respiro);padding-right:var(--respiro)}
+nav,main,.barra-status .in{padding-left:var(--respiro);padding-right:var(--respiro)}
+select{max-width:100%}
+img,table{max-width:100%}
+
+/* ---- monitor grande: aproveita a largura sem esticar o texto ---- */
+@media(min-width:1500px){
+  :root{--largura:1320px}
+  .painel.ativo{grid-template-columns:minmax(0,1fr) 408px;gap:44px}
+}
+
+/* ---- notebook estreito: coluna da fatura encolhe antes de cair ---- */
+@media(max-width:1100px){
+  .painel.ativo{grid-template-columns:minmax(0,1fr) 324px;gap:26px}
+  .painel{padding:22px}
+}
+
+/* ---- tablet deitado e abaixo: uma coluna só ---- */
+@media(max-width:960px){
+  .painel.ativo{grid-template-columns:minmax(0,1fr)}
+  .comp{grid-template-columns:minmax(0,1fr)}
+  .fatura{position:static}
+  .head-in{align-items:flex-start}
+}
+
+/* A fatura só gruda no topo se a janela tiver altura para isso;
+   em tela baixa ela roubaria a área útil do formulário. */
+@media(min-width:961px) and (max-height:620px){
+  .fatura{position:static}
+}
+
+/* ---- tablet em pé e celular grande ---- */
+@media(max-width:760px){
+  :root{--respiro:18px}
+  body{font-size:15px}
+  .head-in{padding-top:16px;padding-bottom:14px;gap:14px;flex-direction:column;align-items:stretch}
+  h1{font-size:20px}
+  .sub{font-size:13px;max-width:none}
+  .globais{gap:10px}
+  .g-campo{flex:1 1 128px;min-width:0}
+  .g-campo input,.g-campo select{width:100%}
+
+  /* as abas passam a rolar de lado em vez de quebrar a linha */
+  nav{
+    overflow-x:auto;overscroll-behavior-x:contain;
+    scrollbar-width:none;-webkit-overflow-scrolling:touch;
+    scroll-snap-type:x proximity;
+  }
+  nav::-webkit-scrollbar{display:none}
+  .aba{white-space:nowrap;flex:0 0 auto;scroll-snap-align:start;padding:10px 13px}
+
+  main{padding-bottom:48px}
+  .painel{padding:18px 16px}
+  fieldset{margin-bottom:18px}
+  legend small{max-width:none}
+  .grade{gap:12px}
+  .fatura{padding:18px 16px 14px}
+  .destaque .valor{font-size:34px}
+  .sinc{flex-direction:column;align-items:stretch}
+
+  /* 16px no campo evita o zoom automático do Safari no iPhone
+     quando o teclado abre. */
+  input,select{font-size:16px;padding:9px 10px}
+  button.acao{padding:11px 16px;min-height:44px;width:100%}
+  .barra-status .in{padding-top:9px;padding-bottom:9px}
+  .barra-status button{min-height:36px;padding:6px 12px}
+}
+
+/* ---- celular ---- */
+@media(max-width:560px){
+  :root{--respiro:14px}
+  .grade{grid-template-columns:minmax(0,1fr)}
+  label.campo.larga{grid-column:span 1}
+  .painel{padding:16px 14px}
+  .destaque .valor{font-size:30px}
+  .mensal .v{font-size:20px}
+  .consolidado{gap:6px}
+  .consolidado .v{font-size:26px}
+  .itens td{padding:7px 0}
+  .detalhe{line-height:1.35}
+  .barra-status .in{flex-direction:column;align-items:stretch;gap:8px}
+  .barra-status button{width:100%}
+  table.precos td input{width:100%;min-width:76px}
+}
+
+/* ---- celular pequeno (360px e abaixo) ---- */
+@media(max-width:380px){
+  :root{--respiro:11px}
+  h1{font-size:18.5px}
+  .aba{padding:9px 11px;font-size:13.5px}
+  .destaque .valor{font-size:27px}
+  .painel{padding:14px 12px}
+}
+
+/* ---- dedo em vez de mouse: alvo maior ---- */
+@media(hover:none){
+  .aba{min-height:44px}
+  input,select{min-height:40px}
+  .venda input{min-height:38px}
+}
 
 /* ---------- impressão ---------- */
 @media print{

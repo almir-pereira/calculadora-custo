@@ -211,12 +211,14 @@
 
     <h3 style="margin-top:34px;font-size:14px">Se o volume mudar</h3>
     <p class="obs" style="margin-top:4px">O custo variável acompanha o volume; a infraestrutura fixa não. Por isso o custo unitário cai conforme a operação cresce.</p>
-    <table class="sens">
-      <thead>
-        <tr><th>Cenário</th><th>Chamadas/dia</th><th>Conversas/dia</th><th>Custo mensal</th><th>Custo por chamada</th><th>Custo por conversa</th></tr>
-      </thead>
-      <tbody id="c_sens"></tbody>
-    </table>
+    <div class="rolagem" tabindex="0">
+      <table class="sens">
+        <thead>
+          <tr><th>Cenário</th><th>Chamadas/dia</th><th>Conversas/dia</th><th>Custo mensal</th><th>Custo por chamada</th><th>Custo por conversa</th></tr>
+        </thead>
+        <tbody id="c_sens"></tbody>
+      </table>
+    </div>
 
     <div style="margin-top:26px;display:flex;gap:10px;flex-wrap:wrap">
       <button class="acao" id="btn-copiar">Copiar resumo</button>
@@ -231,10 +233,12 @@
   <div style="width:100%">
     <fieldset>
       <legend>Modelos de linguagem — dólar por 1 milhão de tokens<small>Cache hit é o preço reduzido da entrada reaproveitada. Confira sempre na página oficial antes de fechar proposta.</small></legend>
-      <table class="precos">
-        <thead><tr><th>Modelo</th><th class="n">Entrada</th><th class="n">Cache hit</th><th class="n">Saída</th></tr></thead>
-        <tbody id="tab-llm"></tbody>
-      </table>
+      <div class="rolagem" tabindex="0">
+        <table class="precos">
+          <thead><tr><th>Modelo</th><th class="n">Entrada</th><th class="n">Cache hit</th><th class="n">Saída</th></tr></thead>
+          <tbody id="tab-llm"></tbody>
+        </table>
+      </div>
       <div class="sinc">
         <button class="acao" id="btn-precos">Buscar preços atuais</button>
         <span class="obs">Consulta a lista pública da <strong>OpenRouter</strong> e, para o que faltar, o catálogo do
@@ -245,38 +249,46 @@
 
     <fieldset>
       <legend>Transcrição — dólar por minuto de áudio<small>Deepgram cobra por minuto processado. Streaming custa mais caro que arquivo pré-gravado.</small></legend>
-      <table class="precos">
-        <thead><tr><th>Serviço</th><th class="n">US$/minuto</th></tr></thead>
-        <tbody id="tab-stt"></tbody>
-      </table>
+      <div class="rolagem" tabindex="0">
+        <table class="precos">
+          <thead><tr><th>Serviço</th><th class="n">US$/minuto</th></tr></thead>
+          <tbody id="tab-stt"></tbody>
+        </table>
+      </div>
     </fieldset>
 
     <fieldset>
       <legend>Voz sintetizada — dólar por mil caracteres<small>A tarifa é a mesma em Free, Starter, Creator, Pro, Scale e Business. O plano define quantos caracteres já vêm inclusos na mensalidade.</small></legend>
-      <table class="precos">
-        <thead><tr><th>Modelo</th><th class="n">US$/1.000 caracteres</th></tr></thead>
-        <tbody id="tab-tts"></tbody>
-      </table>
+      <div class="rolagem" tabindex="0">
+        <table class="precos">
+          <thead><tr><th>Modelo</th><th class="n">US$/1.000 caracteres</th></tr></thead>
+          <tbody id="tab-tts"></tbody>
+        </table>
+      </div>
 
       <h3 style="font-size:13px;margin-top:22px">Caracteres inclusos em cada plano</h3>
-      <table class="precos" style="margin-top:8px">
-        <thead><tr><th>Plano</th><th class="n">Modelos a US$ 0,10</th><th class="n">Modelos a US$ 0,05</th></tr></thead>
-        <tbody id="tab-planos"></tbody>
-      </table>
+      <div class="rolagem" tabindex="0">
+        <table class="precos" style="margin-top:8px">
+          <thead><tr><th>Plano</th><th class="n">Modelos a US$ 0,10</th><th class="n">Modelos a US$ 0,05</th></tr></thead>
+          <tbody id="tab-planos"></tbody>
+        </table>
+      </div>
       <p class="obs">A franquia equivale à mensalidade convertida na tarifa do modelo: gastar dentro dela é o mesmo preço que gastar fora. Ela serve para escolher o plano, não para mudar o custo por chamada.</p>
     </fieldset>
 
     <fieldset>
       <legend>De onde vêm estes números<small>Quais campos a página busca sozinha e quais dependem de você.</small></legend>
-      <table class="precos">
-        <thead><tr><th>Bloco</th><th>Fonte</th><th>Atualização</th></tr></thead>
-        <tbody>
-          <tr><td>Modelos de linguagem</td><td>openrouter.ai/api/v1/models + models.dev/api.json</td><td>automática</td></tr>
-          <tr><td>Cotação do dólar</td><td>economia.awesomeapi.com.br (reserva: open.er-api.com)</td><td>automática</td></tr>
-          <tr><td>Transcrição (Deepgram, Whisper)</td><td>dados/precos-audio.json, mantido por você</td><td>manual</td></tr>
-          <tr><td>Voz sintetizada (ElevenLabs)</td><td>dados/precos-audio.json, mantido por você</td><td>manual</td></tr>
-        </tbody>
-      </table>
+      <div class="rolagem" tabindex="0">
+        <table class="precos">
+          <thead><tr><th>Bloco</th><th>Fonte</th><th>Atualização</th></tr></thead>
+          <tbody>
+            <tr><td>Modelos de linguagem</td><td>openrouter.ai/api/v1/models + models.dev/api.json</td><td>automática</td></tr>
+            <tr><td>Cotação do dólar</td><td>economia.awesomeapi.com.br (reserva: open.er-api.com)</td><td>automática</td></tr>
+            <tr><td>Transcrição (Deepgram, Whisper)</td><td>dados/precos-audio.json, mantido por você</td><td>manual</td></tr>
+            <tr><td>Voz sintetizada (ElevenLabs)</td><td>dados/precos-audio.json, mantido por você</td><td>manual</td></tr>
+          </tbody>
+        </table>
+      </div>
       <p class="obs">
         Só o preço de modelo de linguagem tem fonte aberta consultável em tempo real. Deepgram e ElevenLabs não publicam
         endpoint de preços: edite <code>dados/precos-audio.json</code> quando a tabela deles mudar, ou digite direto nos
