@@ -1,0 +1,17 @@
+{
+  "_leia_me": "Tarifas de transcricao (US$ por minuto) e de voz (US$ por mil caracteres). Deepgram e ElevenLabs nao publicam API de precos, entao este arquivo e a fonte da verdade: confira em deepgram.com/pricing e elevenlabs.io/pricing e edite os numeros. As chaves precisam bater com os ids de PRECOS em js/dados.js.",
+  "atualizado_em": "2026-09-10",
+  "stt": {
+    "nova3-stream": 0.0077,
+    "nova3-file": 0.0043,
+    "nova2-stream": 0.0059,
+    "nova2-file": 0.0043,
+    "whisper": 0.006
+  },
+  "tts": {
+    "v3": 0.10,
+    "v3conv": 0.05,
+    "v2ml": 0.10,
+    "flash": 0.05
+  }
+}

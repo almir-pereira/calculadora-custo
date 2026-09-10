@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calculadora de custo — agentes de IA de voz e texto</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/estilo.css">
+</head>
+<body>
+
+
+<header>
+  <div class="head-in">
+    <div>
+      <h1>Calculadora de custo — agentes de IA</h1>
+      <p class="sub">Custo por chamada e por conversa somando LLM, transcrição, voz sintetizada e infraestrutura. Todos os preços são editáveis na aba Preços.</p>
+    </div>
+    <div class="globais">
+      <label class="g-campo"><span>Moeda</span>
+        <select id="moeda"><option value="BRL">Real (R$)</option><option value="USD">Dólar (US$)</option></select>
+      </label>
+      <label class="g-campo"><span>Dólar em R$</span><input type="number" id="cambio" value="5.40" step="0.01" min="0"></label>
+      <label class="g-campo"><span>Dias por mês</span><input type="number" id="dias" value="30" step="1" min="1"></label>
+    </div>
+  </div>
+</header>
+
+<div class="barra-status">
+  <div class="in">
+    <span id="rodape-quando">Preços de referência embutidos no arquivo.</span>
+    <span class="status" id="st-topo"></span>
+    <button type="button" id="btn-sinc">Atualizar preços e câmbio</button>
+  </div>
+</div>
+
+<nav role="tablist">
+  <button class="aba" role="tab" aria-selected="true" data-alvo="p-voz">Agente de voz</button>
+  <button class="aba" role="tab" aria-selected="false" data-alvo="p-texto">Agente de texto</button>
+  <button class="aba" role="tab" aria-selected="false" data-alvo="p-comp">Comparativo</button>
+  <button class="aba" role="tab" aria-selected="false" data-alvo="p-precos">Preços</button>
+</nav>
+
+<main>
+
+<!-- ============ VOZ ============ -->
+<section class="painel ativo" id="p-voz" role="tabpanel">
+  <div>
+    <fieldset>
+      <legend>Volume de chamadas<small>Uma chamada é uma ligação atendida do início ao fim pelo agente.</small></legend>
+      <div class="grade">
+        <label class="campo"><span>Chamadas por dia</span><input type="number" id="v_chamadas" value="120" min="0" step="1"></label>
+        <label class="campo"><span>Duração média (minutos)</span><input type="number" id="v_dur" value="3.5" min="0" step="0.1"></label>
+        <label class="campo"><span>Respostas da IA por chamada</span><input type="number" id="v_turnos" value="12" min="0" step="1"></label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Modelo de linguagem<small>A cada resposta o histórico inteiro volta como entrada. Se você usa cache de prompt, informe o percentual que reaproveita o prefixo.</small></legend>
+      <div class="grade">
+        <label class="campo larga"><span>Modelo</span><select id="v_llm"></select></label>
+        <label class="campo"><span>Tokens de entrada por resposta</span><input type="number" id="v_tin" value="1800" min="0" step="50"></label>
+        <label class="campo"><span>Tokens de saída por resposta</span><input type="number" id="v_tout" value="90" min="0" step="10"></label>
+        <label class="campo"><span>Entrada em cache (%)</span><input type="number" id="v_cache" value="60" min="0" max="100" step="5"></label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Transcrição<small>Em streaming a cobrança é pelo tempo de conexão, não pelo tempo de fala. Use o fator abaixo se o áudio só é enviado enquanto o cliente fala.</small></legend>
+      <div class="grade">
+        <label class="campo larga"><span>Serviço</span><select id="v_stt"></select></label>
+        <label class="campo"><span>Fator de minutos cobrados</span><input type="number" id="v_fatorstt" value="1" min="0" max="2" step="0.05"></label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Voz sintetizada<small>A tarifa por mil caracteres é a mesma em todos os planos da ElevenLabs; o que muda é a franquia inclusa. O texto é estimado a partir dos tokens de saída do modelo.</small></legend>
+      <div class="grade">
+        <label class="campo larga"><span>Modelo de voz</span><select id="v_tts"></select></label>
+        <label class="campo"><span>Caracteres por token</span><input type="number" id="v_cpt" value="4" min="1" max="8" step="0.1"></label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Telefonia e infraestrutura<small>Tronco SIP por minuto, mais o rateio da máquina que roda o LiveKit e o FreeSWITCH.</small></legend>
+      <div class="grade">
+        <label class="campo"><span>Tronco SIP por minuto (R$)</span><input type="number" id="v_sip" value="0.06" min="0" step="0.01"></label>
+        <label class="campo"><span>Servidores por mês (R$)</span><input type="number" id="v_infra" value="250" min="0" step="10"></label>
+      </div>
+    </fieldset>
+  </div>
+
+  <aside class="fatura" id="f-voz">
+    <h3>Custo de uma chamada</h3>
+    <p class="ref" id="v_ref">—</p>
+    <div class="destaque">
+      <div class="valor num" id="v_unit">—</div>
+      <div class="rotulo">por chamada atendida</div>
+    </div>
+    <div class="barra" id="v_barra"></div>
+    <table class="itens">
+      <tbody id="v_itens"></tbody>
+    </table>
+    <div class="mensal">
+      <span class="r">Total mensal</span><span class="v num" id="v_mes">—</span>
+    </div>
+    <p class="nota-plano" id="v_plano">—</p>
+    <div class="venda">
+      <div class="venda-linha">
+        <label for="v_markup">Margem sobre o custo (%)</label>
+        <input type="number" id="v_markup" value="200" min="0" step="10">
+      </div>
+      <div class="venda-linha"><span>Preço sugerido por chamada</span><span class="num" id="v_preco">—</span></div>
+      <div class="venda-linha"><span>Receita mensal no volume atual</span><span class="num" id="v_receita">—</span></div>
+    </div>
+  </aside>
+</section>
+
+<!-- ============ TEXTO ============ -->
+<section class="painel" id="p-texto" role="tabpanel">
+  <div>
+    <fieldset>
+      <legend>Volume de conversas<small>Uma conversa é uma janela de atendimento, do primeiro contato até o encerramento.</small></legend>
+      <div class="grade">
+        <label class="campo"><span>Conversas por dia</span><input type="number" id="t_conversas" value="400" min="0" step="10"></label>
+        <label class="campo"><span>Respostas da IA por conversa</span><input type="number" id="t_msgs" value="8" min="0" step="1"></label>
+        <label class="campo"><span>Custo da plataforma por conversa (R$)</span><input type="number" id="t_plataforma" value="0.08" min="0" step="0.01"></label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Modelo de linguagem<small>Em atendimento por texto o histórico costuma ser maior e a resposta mais longa que na voz.</small></legend>
+      <div class="grade">
+        <label class="campo larga"><span>Modelo</span><select id="t_llm"></select></label>
+        <label class="campo"><span>Tokens de entrada por resposta</span><input type="number" id="t_tin" value="3000" min="0" step="100"></label>
+        <label class="campo"><span>Tokens de saída por resposta</span><input type="number" id="t_tout" value="220" min="0" step="10"></label>
+        <label class="campo"><span>Entrada em cache (%)</span><input type="number" id="t_cache" value="50" min="0" max="100" step="5"></label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Áudios recebidos<small>Cliente que manda áudio no WhatsApp gera transcrição. Aqui a cobrança é por arquivo processado, não por conexão.</small></legend>
+      <div class="grade">
+        <label class="campo larga"><span>Serviço</span><select id="t_stt"></select></label>
+        <label class="campo"><span>Mensagens que chegam em áudio (%)</span><input type="number" id="t_pctaudio" value="20" min="0" max="100" step="5"></label>
+        <label class="campo"><span>Duração média do áudio (minutos)</span><input type="number" id="t_duraudio" value="0.5" min="0" step="0.1"></label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Respostas em áudio<small>Deixe em zero se o agente só responde por escrito.</small></legend>
+      <div class="grade">
+        <label class="campo larga"><span>Modelo de voz</span><select id="t_tts"></select></label>
+        <label class="campo"><span>Respostas enviadas em áudio (%)</span><input type="number" id="t_pctvoz" value="0" min="0" max="100" step="5"></label>
+        <label class="campo"><span>Caracteres por token</span><input type="number" id="t_cpt" value="4" min="1" max="8" step="0.1"></label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Infraestrutura</legend>
+      <div class="grade">
+        <label class="campo"><span>Servidores e banco por mês (R$)</span><input type="number" id="t_infra" value="180" min="0" step="10"></label>
+      </div>
+    </fieldset>
+  </div>
+
+  <aside class="fatura" id="f-texto">
+    <h3>Custo de uma conversa</h3>
+    <p class="ref" id="t_ref">—</p>
+    <div class="destaque">
+      <div class="valor num" id="t_unit">—</div>
+      <div class="rotulo">por conversa atendida</div>
+    </div>
+    <div class="barra" id="t_barra"></div>
+    <table class="itens"><tbody id="t_itens"></tbody></table>
+    <div class="mensal">
+      <span class="r">Total mensal</span><span class="v num" id="t_mes">—</span>
+    </div>
+    <p class="nota-plano" id="t_plano">—</p>
+    <div class="venda">
+      <div class="venda-linha">
+        <label for="t_markup">Margem sobre o custo (%)</label>
+        <input type="number" id="t_markup" value="250" min="0" step="10">
+      </div>
+      <div class="venda-linha"><span>Preço sugerido por conversa</span><span class="num" id="t_preco">—</span></div>
+      <div class="venda-linha"><span>Receita mensal no volume atual</span><span class="num" id="t_receita">—</span></div>
+    </div>
+  </aside>
+</section>
+
+<!-- ============ COMPARATIVO ============ -->
+<section class="painel solo" id="p-comp" role="tabpanel">
+  <div style="width:100%">
+    <div class="comp">
+      <div class="comp-bloco">
+        <h3>Agente de voz</h3>
+        <div id="c_voz"></div>
+      </div>
+      <div class="comp-bloco">
+        <h3>Agente de texto</h3>
+        <div id="c_texto"></div>
+      </div>
+    </div>
+
+    <div class="consolidado">
+      <span>Custo mensal das duas operações somadas</span>
+      <span class="v num" id="c_total">—</span>
+    </div>
+
+    <h3 style="margin-top:34px;font-size:14px">Se o volume mudar</h3>
+    <p class="obs" style="margin-top:4px">O custo variável acompanha o volume; a infraestrutura fixa não. Por isso o custo unitário cai conforme a operação cresce.</p>
+    <table class="sens">
+      <thead>
+        <tr><th>Cenário</th><th>Chamadas/dia</th><th>Conversas/dia</th><th>Custo mensal</th><th>Custo por chamada</th><th>Custo por conversa</th></tr>
+      </thead>
+      <tbody id="c_sens"></tbody>
+    </table>
+
+    <div style="margin-top:26px;display:flex;gap:10px;flex-wrap:wrap">
+      <button class="acao" id="btn-copiar">Copiar resumo</button>
+      <button class="acao leve" id="btn-imprimir">Imprimir</button>
+    </div>
+    <div class="status" id="st-copia"></div>
+  </div>
+</section>
+
+<!-- ============ PREÇOS ============ -->
+<section class="painel solo" id="p-precos" role="tabpanel">
+  <div style="width:100%">
+    <fieldset>
+      <legend>Modelos de linguagem — dólar por 1 milhão de tokens<small>Cache hit é o preço reduzido da entrada reaproveitada. Confira sempre na página oficial antes de fechar proposta.</small></legend>
+      <table class="precos">
+        <thead><tr><th>Modelo</th><th class="n">Entrada</th><th class="n">Cache hit</th><th class="n">Saída</th></tr></thead>
+        <tbody id="tab-llm"></tbody>
+      </table>
+      <div class="sinc">
+        <button class="acao" id="btn-precos">Buscar preços atuais</button>
+        <span class="obs">Consulta a lista pública da <strong>OpenRouter</strong> e, para o que faltar, o catálogo do
+        <strong>models.dev</strong>. Nenhuma das duas pede chave de acesso. Na mesma passada busca a cotação do dólar.</span>
+      </div>
+      <div class="status" id="st-precos"></div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Transcrição — dólar por minuto de áudio<small>Deepgram cobra por minuto processado. Streaming custa mais caro que arquivo pré-gravado.</small></legend>
+      <table class="precos">
+        <thead><tr><th>Serviço</th><th class="n">US$/minuto</th></tr></thead>
+        <tbody id="tab-stt"></tbody>
+      </table>
+    </fieldset>
+
+    <fieldset>
+      <legend>Voz sintetizada — dólar por mil caracteres<small>A tarifa é a mesma em Free, Starter, Creator, Pro, Scale e Business. O plano define quantos caracteres já vêm inclusos na mensalidade.</small></legend>
+      <table class="precos">
+        <thead><tr><th>Modelo</th><th class="n">US$/1.000 caracteres</th></tr></thead>
+        <tbody id="tab-tts"></tbody>
+      </table>
+
+      <h3 style="font-size:13px;margin-top:22px">Caracteres inclusos em cada plano</h3>
+      <table class="precos" style="margin-top:8px">
+        <thead><tr><th>Plano</th><th class="n">Modelos a US$ 0,10</th><th class="n">Modelos a US$ 0,05</th></tr></thead>
+        <tbody id="tab-planos"></tbody>
+      </table>
+      <p class="obs">A franquia equivale à mensalidade convertida na tarifa do modelo: gastar dentro dela é o mesmo preço que gastar fora. Ela serve para escolher o plano, não para mudar o custo por chamada.</p>
+    </fieldset>
+
+    <fieldset>
+      <legend>De onde vêm estes números<small>Quais campos a página busca sozinha e quais dependem de você.</small></legend>
+      <table class="precos">
+        <thead><tr><th>Bloco</th><th>Fonte</th><th>Atualização</th></tr></thead>
+        <tbody>
+          <tr><td>Modelos de linguagem</td><td>openrouter.ai/api/v1/models + models.dev/api.json</td><td>automática</td></tr>
+          <tr><td>Cotação do dólar</td><td>economia.awesomeapi.com.br (reserva: open.er-api.com)</td><td>automática</td></tr>
+          <tr><td>Transcrição (Deepgram, Whisper)</td><td>dados/precos-audio.json, mantido por você</td><td>manual</td></tr>
+          <tr><td>Voz sintetizada (ElevenLabs)</td><td>dados/precos-audio.json, mantido por você</td><td>manual</td></tr>
+        </tbody>
+      </table>
+      <p class="obs">
+        Só o preço de modelo de linguagem tem fonte aberta consultável em tempo real. Deepgram e ElevenLabs não publicam
+        endpoint de preços: edite <code>dados/precos-audio.json</code> quando a tabela deles mudar, ou digite direto nos
+        campos acima. A leitura desse arquivo exige servir a pasta por HTTP — abrindo o <code>index.html</code> com dois
+        cliques o navegador bloqueia a leitura e a página segue com os valores embutidos.
+      </p>
+      <p class="obs">
+        O resultado fica guardado no navegador por 12 horas; passado esse prazo a página busca de novo sozinha ao abrir.
+        Valor que você digita à mão ganha o selo <span class="selo manual">editado</span> e vence o que veio da API até a
+        próxima sincronização.
+      </p>
+      <p class="obs">
+        Três detalhes que costumam derrubar a estimativa na prática: cobrança mínima por requisição de voz, tempo de silêncio contado
+        na conexão de streaming, e o histórico da conversa crescendo a cada turno — o campo de tokens de entrada é uma média, então
+        vale medir a real depois de uma semana em produção.
+      </p>
+    </fieldset>
+  </div>
+</section>
+
+</main>
+
+<script src="js/dados.js"></script>
+<script src="js/api.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

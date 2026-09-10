@@ -1,0 +1,9 @@
+# versão anterior, em arquivo único — o histórico do git já guarda isso
+_backup/
+
+# lixo de sistema e de editor
+Thumbs.db
+desktop.ini
+.DS_Store
+.vscode/
+.idea/
